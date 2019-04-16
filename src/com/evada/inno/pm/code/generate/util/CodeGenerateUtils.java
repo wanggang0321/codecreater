@@ -23,12 +23,12 @@ public class CodeGenerateUtils {
 	
 	private String AUTHOR = "";
     private String CURRENT_DATE = "";
-    private String tableName = "crm_school_contract_apply";
-    private String packageName = "com.collegepre.aspen.crm.tenantadmin.franch";
-    private String tableAnnotation = "质量问题";
-    private String URL = "jdbc:mysql://60.205.201.67:3306/zhuozhou-fangchan";
+    private String tableName = "invoice_paper_price_apply";
+    private String packageName = "com.collegepre.aspen.crm.invoice";
+    private String tableAnnotation = "已处理发票申请";
+    private String URL = "jdbc:mysql://127.0.0.1:3306/workdemo";
     private String USER = "root";
-    private String PASSWORD = "PpdWang@0121";
+    private String PASSWORD = "root";
     private String DRIVER = "com.mysql.jdbc.Driver";
     private String diskPath = "E://codegenerator//";
     private String changeTableName = replaceUnderLineAndUpperCase(tableName);
@@ -47,7 +47,10 @@ public class CodeGenerateUtils {
     public static void main(String[] args) {
         CodeGenerateUtils codeGenerateUtils = new CodeGenerateUtils();
         try {
+        	
 			codeGenerateUtils.generate();
+			
+			openFolder();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -284,6 +287,24 @@ public class CodeGenerateUtils {
     	} else if (file.exists()) {
     		file.delete();
     	}
+    }
+    
+    private static void openFolder() {
+    	/*try {
+            java.awt.Desktop.getDesktop().open(new File("D:\\Java"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+    	
+    	final Runtime runtime = Runtime.getRuntime();  
+    	Process process = null;
+    	final String cmd = "rundll32 url.dll FileProtocolHandler file://E:\\codegenerator";//要打开的文件路径。
+    	try {  
+    		process = runtime.exec(cmd);  
+    	} catch (final Exception e) {  
+    		System.out.println("Error exec!");  
+    	}
+    	
     }
     
 }

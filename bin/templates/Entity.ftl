@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
-* 描述：${table_annotation}模型
+* 描述：${table_annotation}
 * @author ${author}
 * @date ${date}
 */

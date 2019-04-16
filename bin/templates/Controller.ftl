@@ -46,12 +46,12 @@ public class ${table_name}Controller {
 
 	@RequestMapping(value="/select${table_name?lower_case}list")
 	public String select${table_name}List(HttpServletRequest request, HttpServletResponse response, Model model,
-			String searchFlag, String pn, String searchStr) {
+			String searchFlag, String pn, String searchContext) {
 		
 		String userId = CookieUtils.getCookie(request, "userid");
 		String tenantId = CookieUtils.getCookie(request, "tenantid");
 		
-		searchStr = StringUtils.isNotBlank(searchStr) ? searchStr.trim() : "";
+		searchContext = StringUtils.isNotBlank(searchContext) ? searchContext.trim() : "";
 		
 		Integer pagenum = 1;
 		if(StringUtils.isNotBlank(pn)){
@@ -69,27 +69,29 @@ public class ${table_name}Controller {
 
     @RequestMapping(value="/select${table_name?lower_case}data")
 	public void select${table_name}Data(HttpServletRequest request,HttpServletResponse response, Model model,
-			String searchFlag, String pns, String searchStr) {
+			String searchFlag, String pns, String searchContext) {
 		
 		String tenantId = CookieUtils.getCookie(request, "tenantid");
 		String userId = CookieUtils.getCookie(request, "userid");
 		
 		Map<String, Object> sqlMap = new HashMap<String, Object>();
+		
+		/*------ start:查询条件 ------*/
 		sqlMap.put("tenantId", tenantId);
 		sqlMap.put("crmUserId", userId);
+		if(StringUtils.isNotBlank(searchStr)) {
+			sqlMap.put("searchContext", com.collegepre.aspen.common.utils.StringUtils.sqlFormalSpecialCharacter(searchContext.trim()));
+		}
+		/*------ end:查询条件 ------*/
+		
+		/*------ start:数据范围 ------*/
+		
+		/*------ end:数据范围 -------*/
 		
 		Integer pagenum = 1;
 		if(StringUtils.isNotBlank(pns)){
 			pagenum = Integer.parseInt(pns);
 		}
-		if(StringUtils.isNotBlank(searchStr)) {
-			sqlMap.put("searchStr", com.collegepre.aspen.common.utils.StringUtils.sqlFormalSpecialCharacter(searchStr.trim()));
-		}
-		String ids = ${table_name?uncap_first}Service.selectManageOrgNodesOfAdmin(sqlMap);
-		if("$".equals(ids)){
-			ids = "";
-		}
-		sqlMap.put("ids", ids);
 		
 		int count = ${table_name?uncap_first}Service.select${table_name}Count(sqlMap);
 		PageInfo paging = new PageInfo(pagenum, count);
