@@ -33,4 +33,20 @@ public class ${table_name}Dao extends BaseDao {
 		return super.getSqlSession().selectList("${table_name}.select${table_name}list", sqlMap);
 	}
 	
+	public List<${table_name}Org> getOrganizationTree(Map<String, Object> sqlMap) {
+		return super.getSqlSession().selectList("${table_name}.getOrganizationTree", sqlMap);
+	}
+	
+	public String selectChildOrgByOrgId(Map<String,String> sqlMap) {
+		return super.getSqlSession().selectOne("${table_name}.selectChildOrgByOrgId", sqlMap);
+	}
+
+	public String getManageOrgNodes(Map<String,String> sqlMap) {
+		return super.getSqlSession().selectOne("${table_name}.getManageOrgNodes", sqlMap);
+	}
+
+	public List<String> getManageOrgNodesOfAdmin(Map<String, String> sqlMap) {
+		return super.getSqlSession().selectList("${table_name}.getManageOrgNodesOfAdmin", sqlMap);
+	}
+	
 }

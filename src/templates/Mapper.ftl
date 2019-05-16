@@ -82,4 +82,40 @@
 		LIMIT ${r'#{start}'}, ${r'#{rows}'}
 	</select>
 	
+	<select id="getOrganizationTree" parameterType="java.util.Map" resultType="${table_name}Org">
+		SELECT
+			cg.corgid AS cOrgId,
+			cg.parentid AS parentId,
+			cg.orgname AS orgName,
+			cg.level
+		FROM
+			crmorg cg
+			<if test="userId !=null and userId !=''">
+				,(select getManageOrgsAndParentsOfAdmin(#{userId}) as str) AS ts
+			</if>
+		WHERE
+			cg.tenantid=#{tenantId} AND cg.revo='0'
+			<if test="userId !=null and userId !=''">
+				AND FIND_IN_SET(cg.corgid, ts.str)
+			</if>
+		ORDER BY cg.createtime ASC
+	</select>
+
+	<select id="selectChildOrgByOrgId" parameterType="java.util.Map" resultType="java.lang.String">
+		SELECT getManageClassAndChildsOfUserUnderOneOrg(#{userId}, #{selectedSchoolId})
+	</select>
+	
+	<select id="getManageOrgNodes" parameterType="java.util.Map" resultType="java.lang.String">
+		SELECT getManageOrgNodesOfAdmin(#{userId})
+	</select>
+	
+	<select id="getManageOrgNodesOfAdmin" parameterType="java.util.Map" resultType="java.lang.String">
+		SELECT
+			DISTINCT corgid as orgs
+		FROM
+			crmorg
+		WHERE
+			tenantid=#{tenantId}
+	</select>
+	
 </mapper>

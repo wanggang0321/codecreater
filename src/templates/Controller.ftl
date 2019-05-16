@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.alibaba.fastjson.JSON;
+import com.collegepre.aspen.common.constant.ConstantDic;
 import com.collegepre.aspen.common.page.PageInfo;
 import com.collegepre.aspen.common.utils.CookieUtils;
 import ${package_name}.service.${table_name}Service;
@@ -36,7 +37,7 @@ import ${package_name}.entity.${table_name}Title;
 * @date ${date}
 */
 @Controller
-@RequestMapping(value = "/${table_name?lower_case}/")
+@RequestMapping(value="/${table_name?lower_case}/")
 public class ${table_name}Controller {
 	
 	private Logger log = LoggerFactory.getLogger(${table_name}Controller.class);
@@ -48,10 +49,22 @@ public class ${table_name}Controller {
 	public String select${table_name}List(HttpServletRequest request, HttpServletResponse response, Model model,
 			String searchFlag, String pn, String searchContext) {
 		
+		searchContext = StringUtils.isNotBlank(searchContext) ? searchContext.trim() : "";
+		
+		String roleType = CookieUtils.getCookie(request, "roletype");
+		String tenantId = CookieUtils.getCookie(request, "tenantid");
 		String userId = CookieUtils.getCookie(request, "userid");
 		String tenantId = CookieUtils.getCookie(request, "tenantid");
 		
-		searchContext = StringUtils.isNotBlank(searchContext) ? searchContext.trim() : "";
+		String requireOrgId = request.getParameter("requireOrgId");
+		String requireOrgName = request.getParameter("requireOrgName");
+		String contractStatus = request.getParameter("contractStatus");
+		String dateType = request.getParameter("dateType");
+		String applyStartTime = request.getParameter("applyStartTime");
+		String applyEndTime = request.getParameter("applyEndTime");
+		
+		Map<String, Object> sqlMap = new HashMap<String, Object>();
+		sqlMap.put("tenantId", tenantId);
 		
 		Integer pagenum = 1;
 		if(StringUtils.isNotBlank(pn)){
@@ -64,27 +77,66 @@ public class ${table_name}Controller {
 		}
 		model.addAttribute("searchFlag", searchFlag);
 		
+		//管理员、租户管理员显示组织节点
+		String rootName = "";
+		if("0".equals(roleType)||"1".equals(roleType)) {
+			
+			if(StringUtils.isNotBlank(requireOrgId)) {
+				rootName = requireOrgName;
+			}else{
+				rootName = invoiceDetailService.getRootName(sqlMap);
+			}
+		}
+		model.addAttribute("rootName", rootName);
+		
+		model.addAttribute("roleType", roleType);
+		model.addAttribute("requireOrgId", requireOrgId);
+		model.addAttribute("requireOrgName", requireOrgName);
+		model.addAttribute("dateType", dateType);
+		model.addAttribute("contractStatus", contractStatus);
+		model.addAttribute("applyStartTime", applyStartTime);
+		model.addAttribute("applyEndTime", applyEndTime);
+		model.addAttribute("searchContext", searchContext);
+		
 		return "modules/${table_name?uncap_first}_browse";
 	}
 
     @RequestMapping(value="/select${table_name?lower_case}data")
-	public void select${table_name}Data(HttpServletRequest request,HttpServletResponse response, Model model,
+	public void select${table_name}Data(HttpServletRequest request, HttpServletResponse response, Model model,
 			String searchFlag, String pns, String searchContext) {
 		
+		String roleType = CookieUtils.getCookie(request, "roletype");
 		String tenantId = CookieUtils.getCookie(request, "tenantid");
 		String userId = CookieUtils.getCookie(request, "userid");
+
+		String contractStatus = request.getParameter("contractStatus");
+		String dateType = request.getParameter("dateType");
+		String applyStartTime = request.getParameter("applyStartTime");
+		String applyEndTime = request.getParameter("applyEndTime");
+		String requireOrgId = request.getParameter("requireOrgId");
 		
 		Map<String, Object> sqlMap = new HashMap<String, Object>();
 		
 		/*------ start:查询条件 ------*/
 		sqlMap.put("tenantId", tenantId);
 		sqlMap.put("crmUserId", userId);
+		sqlMap.put("orgId", requireOrgId);
+		
 		if(StringUtils.isNotBlank(searchStr)) {
 			sqlMap.put("searchContext", com.collegepre.aspen.common.utils.StringUtils.sqlFormalSpecialCharacter(searchContext.trim()));
+		}
+		
+		if(StringUtils.isNotBlank(applyStartTime)) {
+			sqlMap.put("queryStartTime", applyStartTime + " 00:00:00");
+		}
+		if(StringUtils.isNotBlank(applyEndTime)) {
+			sqlMap.put("queryEndTime", applyEndTime + " 23:59:59");
 		}
 		/*------ end:查询条件 ------*/
 		
 		/*------ start:数据范围 ------*/
+		List<String> orgstr= getManageOrgStr(request);
+		sqlMap.put("orgstr", orgstr);
 		
 		/*------ end:数据范围 -------*/
 		
@@ -129,6 +181,58 @@ public class ${table_name}Controller {
    				pw = null;
    			}
    		}
+	}
+	
+	@ResponseBody
+	@RequestMapping(value="/getorganizationtree")
+	public List<${table_name}Org> getOrganizationTree(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		
+		List<${table_name}Org> orgList = new ArrayList<${table_name}Org>();
+		
+		String tenantId = CookieUtils.getCookie(request, "tenantid");
+		String roleType = CookieUtils.getCookie(request, "roletype");
+		String userId = CookieUtils.getCookie(request, "userid");
+		
+		response.setCharacterEncoding("UTF-8");
+		response.setContentType("text/html;charset=UTF-8");
+		
+		Map<String, Object> sqlMap = new HashMap<String, Object>();
+		sqlMap.put("tenantId", tenantId);
+		if(!ConstantDic.ROLETYPE_TENANT_ADMIN.equals(roleType)){
+			sqlMap.put("userId", userId);
+		}
+		
+		if(StringUtils.isNotBlank(roleType) && (!ConstantDic.ROLETYPE_GENERAL_USER.equals(roleType))) {
+			orgList = ${table_name?uncap_first}Service.getOrganizationTree(sqlMap);
+		}
+		
+		return orgList;
+	}
+	
+	private List<String> getManageOrgStr(HttpServletRequest request) {
+
+		String userId = CookieUtils.getCookie(request, "userid");
+		String requireOrgId = request.getParameter("requireOrgId");
+		String roleType = CookieUtils.getCookie(request, "roletype");
+		
+		List<String> orgstr= new ArrayList<String>();
+		
+		if(ConstantDic.ROLETYPE_GENERAL_USER.equals(roleType)) { //普通用户
+			orgstr.add("NO-AUTHORITY");
+		} else if(ConstantDic.ROLETYPE_ASSISTANT_ADMIN.equals(roleType)) { //管理员
+			if(StringUtils.isNotBlank(requireOrgId)) {
+				orgstr = ${table_name?uncap_first}Service.selectChildOrgByOrgId(userId, requireOrgId);
+			} else {
+				orgstr = ${table_name?uncap_first}Service.getManageOrgNodes(userId);
+			}
+			if((null==orgstr) || (orgstr.size()==0)) {
+				orgstr.add("NO-AUTHORITY");
+			}
+		} else { //租户管理员
+			//orgstr = ${table_name?uncap_first}Service.getManageOrgNodesOfAdmin(tenantId);
+		}
+		
+		return orgstr;
 	}
 	
 	private List<${table_name}Title> getTitle() {

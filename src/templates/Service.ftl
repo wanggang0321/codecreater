@@ -39,4 +39,50 @@ public class ${table_name}Service {
 		return ${table_name?uncap_first}Dao.select${table_name}list(sqlMap);
 	}
 	
+	public List<${table_name}Org> getOrganizationTree(Map<String, Object> sqlMap) {
+		return ${table_name?uncap_first}Dao.getOrganizationTree(sqlMap);
+	}
+
+	public List<String> selectChildOrgByOrgId(String userId , String selectedSchoolId) {
+		
+		List<String> orgList = new ArrayList<String>();
+		
+		Map<String,String> map = new HashMap<String,String>();
+		map.put("selectedSchoolId", selectedSchoolId);
+		map.put("userId", userId);
+		String orgstr = ${table_name?uncap_first}Dao.selectChildOrgByOrgId(map);
+		
+		String[] split = orgstr.split(","); 
+		for (int i = 0; i < split.length; i++) {
+			String orgId = split[i];
+			if(!"$".equals(orgId) && (!orgList.contains(orgId))){
+				orgList.add(orgId);
+			}
+		}
+		return orgList;
+	}
+
+	public List<String> getManageOrgNodes(String userId) {
+		
+		Map<String,String> map = new HashMap<String,String>();
+		map.put("userId", userId);
+		String manageOrgNodes = ${table_name?uncap_first}Dao.getManageOrgNodes(map);
+		
+		List<String> orgIdList = new ArrayList<String>();
+		String[] split = manageOrgNodes.split(",");
+		for (int i = 0; i < split.length; i++) {
+			String orgId = split[i];
+			if(!"$".equals(orgId) && (!orgIdList.contains(orgId))){
+				orgIdList.add(orgId);
+			}
+		}
+		return orgIdList;
+	}
+
+	public List<String> getManageOrgNodesOfAdmin(String tenantId) {
+		Map<String, String> sqlMap = new HashMap<String, String>();
+		sqlMap.put("tenantId", tenantId);
+		return ${table_name?uncap_first}Dao.getManageOrgNodesOfAdmin(sqlMap);
+	}
+	
 }
